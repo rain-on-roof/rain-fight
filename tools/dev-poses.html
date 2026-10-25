@@ -1,0 +1,32 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>dev poses</title>
+<style>html,body{margin:0;background:#1a1530}canvas{display:block}</style>
+<canvas id="c" width="1600" height="900"></canvas>
+<script type="module">
+import { drawPuppet } from '../src/render/puppet.js';
+import { POSES, blend } from '../src/render/poses.js';
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+const id = new URLSearchParams(location.search).get('f') || 'volt';
+const names = ['guard', 'crouch', 'jump', 'block', 'hit', 'airHit', 'down', 'dizzy', 'win', 'jab', 'kick', 'uppercut', 'sweep', 'jumpKick', 'special'];
+ctx.fillStyle = '#2a2050';
+ctx.fillRect(0, 0, 1600, 900);
+names.forEach((n, i) => {
+  let pose = POSES[n === 'special' ? id + '_special' : n];
+  if (Array.isArray(pose)) pose = pose[1];
+  const x = 110 + (i % 8) * 190;
+  const y = i < 8 ? 400 : 830;
+  ctx.strokeStyle = '#4a3f80';
+  ctx.beginPath(); ctx.moveTo(x - 90, y); ctx.lineTo(x + 90, y); ctx.stroke();
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(0.75, 0.75);
+  drawPuppet(ctx, id, { pose, time: 1, expression: n === 'hit' || n === 'airHit' ? 'hit' : n === 'down' ? 'ko' : n === 'dizzy' ? 'dizzy' : n === 'win' ? 'win' : 'fight' });
+  ctx.restore();
+  ctx.fillStyle = '#fff';
+  ctx.font = '14px sans-serif';
+  ctx.fillText(n, x - 30, y + 20);
+});
+document.title = 'ready';
+</script>

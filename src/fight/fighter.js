@@ -7,7 +7,7 @@ export const DT = 1 / FPS;
 export const GRAVITY = 3300;
 export const WALL_L = 90;
 export const WALL_R = 1510;
-export const BODY_W = 76;
+export const BODY_W = 96;
 export const STAND_H = 230;
 export const CROUCH_H = 135;
 

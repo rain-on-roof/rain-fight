@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>Rain Fight — a rooftop fighting game in your browser</title>
+  <meta name="description" content="A cartoon fighting game on a neon rooftop in the rain. Four fighters, one goose, ridiculous finishers. Play instantly in the browser, solo or with a friend. By Rain on Roof.">
+  <meta name="theme-color" content="#0d0820">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Rain Fight — END IT.">
+  <meta property="og:description" content="Rooftop. Rain. Four fighters and an angry goose. Play free in your browser — no download.">
+  <meta property="og:image" content="https://rain-on-roof.github.io/rain-fight/assets/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:url" content="https://rain-on-roof.github.io/rain-fight/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Rain Fight — END IT.">
+  <meta name="twitter:description" content="Rooftop. Rain. Four fighters and an angry goose. Play free in your browser.">
+  <meta name="twitter:image" content="https://rain-on-roof.github.io/rain-fight/assets/og.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="app" data-screen="title" aria-label="Rain Fight">
+    <div id="arena">
+      <canvas id="game"></canvas>
+    </div>
+
+    <!-- Title -->
+    <section id="title" class="screen">
+      <div class="title-art" aria-hidden="true"></div>
+      <div class="title-body">
+        <h1 class="logo" aria-label="Rain Fight">
+          <span class="logo-rain">RAIN</span><span class="logo-fight">FIGHT</span>
+        </h1>
+        <p class="tagline">Rooftop. Rain. One angry goose.</p>
+        <div class="menu">
+          <button id="play-cpu" class="btn btn-main" type="button">
+            <span>FIGHT</span><small>vs CPU</small>
+          </button>
+          <button id="play-versus" class="btn btn-alt" type="button">
+            <span>2 PLAYERS</span><small>same screen</small>
+          </button>
+        </div>
+        <div class="levels" role="group" aria-label="CPU difficulty">
+          <button type="button" data-level="easy" aria-pressed="false">EASY</button>
+          <button type="button" data-level="normal" aria-pressed="true">NORMAL</button>
+          <button type="button" data-level="hard" aria-pressed="false">HARD</button>
+        </div>
+        <p class="keys only-desktop">
+          <kbd>WASD</kbd> move · <kbd>J</kbd> punch · <kbd>K</kbd> kick · <kbd>L</kbd> special · <kbd>Space</kbd> block
+        </p>
+      </div>
+      <a class="studio" href="https://github.com/rain-on-roof" target="_blank" rel="noopener">a <b>Rain on Roof</b> game</a>
+    </section>
+
+    <!-- Character select -->
+    <section id="select" class="screen" hidden>
+      <header class="select-head">
+        <button id="back" class="icon-btn back" type="button" aria-label="Back">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <h2 id="select-title">CHOOSE YOUR FIGHTER</h2>
+      </header>
+      <div id="cards" class="cards"></div>
+      <p class="select-hint only-desktop">← → to choose · <kbd>Enter</kbd> to fight</p>
+    </section>
+
+    <!-- Result -->
+    <section id="result" class="screen" hidden>
+      <div class="result-card">
+        <img id="result-img" class="result-img" alt="">
+        <div class="result-text">
+          <p id="result-level" class="result-level"></p>
+          <h2 id="result-title">YOU WIN</h2>
+          <p id="result-sub" class="result-sub"></p>
+          <div class="result-actions">
+            <button id="rematch" class="btn btn-main" type="button"><span>REMATCH</span></button>
+            <button id="share" class="btn btn-alt" type="button"><span>SHARE</span></button>
+          </div>
+          <div class="result-links">
+            <button id="change" type="button">Change fighter</button>
+            <button id="menu" type="button">Main menu</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pause -->
+    <section id="pause" class="screen modal" hidden>
+      <div class="pause-card">
+        <h2>PAUSED</h2>
+        <button id="resume" class="btn btn-main" type="button"><span>RESUME</span></button>
+        <button id="quit" class="btn btn-alt" type="button"><span>QUIT</span></button>
+      </div>
+    </section>
+
+    <!-- Touch controls -->
+    <div id="pad" class="pad" hidden>
+      <div class="stick" data-stick aria-label="Move">
+        <div class="knob" data-knob></div>
+      </div>
+      <div class="buttons">
+        <button type="button" class="pb pb-punch" data-btn="punch" aria-label="Punch">P</button>
+        <button type="button" class="pb pb-kick" data-btn="kick" aria-label="Kick">K</button>
+        <button type="button" class="pb pb-special" data-btn="special" aria-label="Special">S</button>
+        <button type="button" class="pb pb-block" data-btn="block" aria-label="Block">B</button>
+      </div>
+    </div>
+
+    <div class="corner">
+      <button id="pause-btn" class="icon-btn" type="button" aria-label="Pause">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg>
+      </button>
+      <button id="mute" class="icon-btn" type="button" aria-label="Sound" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="cross" d="M16 9l6 6M22 9l-6 6"/></svg>
+      </button>
+    </div>
+
+    <div id="toast" class="toast" role="status" hidden></div>
+  </main>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
