@@ -14,8 +14,8 @@ import { drawPuppet, LOOKS } from './render/puppet.js';
 import { POSES } from './render/poses.js';
 import { createGooseAnimator, updateGoose, drawGoose } from './render/goose.js';
 import { softShadow, clamp01, lerp } from './render/paint.js';
-import { loadSprites, hasFrame } from './render/sprites.js';
-import { loadPaintedStage, paintedReady, drawPaintedStage } from './render/stage.js';
+import { loadSprites, hasFrame, spriteReady, drawSpriteAt } from './render/sprites.js';
+import { loadPaintedStage, paintedReady, drawPaintedStage, setStage, STAGES } from './render/stage.js';
 
 const $ = (id) => document.getElementById(id);
 const canvas = $('game');
@@ -86,7 +86,11 @@ function resize() {
 
 /* ---------- matches ---------- */
 
+let stageNo = (Math.random() * STAGES.length) | 0;
+
 function startMatch(p1, p2, mode, attract = false) {
+  // A different rooftop every match.
+  setStage(++stageNo);
   S.match = createMatch({ p1, p2, seed: (Math.random() * 1e9) | 0 });
   S.mode = mode;
   S.attract = attract;
@@ -99,7 +103,11 @@ function startMatch(p1, p2, mode, attract = false) {
   S.slowmo = 0;
   S.resultAt = 0;
   S.cam.x = 800;
-  if (!attract) handleEvents([{ type: 'round', n: 1, final: false }]);
+  if (!attract) {
+    audio.intensity = 0;
+    audio.music('fight');
+    handleEvents([{ type: 'round', n: 1, final: false }]);
+  }
 }
 
 function attract() {
@@ -119,6 +127,7 @@ function handleEvents(events) {
     const f = ev.side !== undefined ? m.fighters[ev.side] : null;
     switch (ev.type) {
       case 'round':
+        if (loud && ev.final) audio.intensity = 1;
         if (loud) banner(S.hud, ev.final ? 'FINAL ROUND' : `ROUND ${ev.n}`, { color: '#ffffff', accent: '#ff4fd8', life: 1.15, size: 0.8 });
         play('round');
         break;
@@ -185,6 +194,7 @@ function handleEvents(events) {
       case 'endIt':
         if (loud) banner(S.hud, 'END IT!', { color: '#ff3d3d', accent: '#ffd23f', life: 2.6, size: 1.2, sub: 'press SPECIAL' });
         play('endIt');
+        if (loud) audio.music(null);
         S.slowmo = 0.6;
         S.flash = 0.5;
         break;
@@ -198,6 +208,11 @@ function handleEvents(events) {
       }
       case 'matchEnd':
         S.resultAt = S.time + (ev.finisher ? 1.6 : 2.2);
+        if (loud) {
+          audio.music(null);
+          const won = S.mode !== 'cpu' || ev.side === 0;
+          play(won ? 'victory' : 'defeat', ev.finisher ? 0.9 : 0.7);
+        }
         if (loud && !ev.finisher) banner(S.hud, `${m.fighters[ev.side].def.name} WINS`, { color: '#ffffff', accent: '#ffd23f', life: 2, size: 0.9 });
         break;
       default:
@@ -431,7 +446,10 @@ function render(dt) {
     ctx.fillRect(0, 0, w, h);
   }
   if (!S.attract && S.screen === 'fight' && S.cutIn < 0) drawHud(ctx, w, h, m, S.hud, { portraits: PORTRAITS, time: S.time, top: 0 });
-  if (S.cutIn >= 0) drawCutIn(ctx, w, h, S.cutIn, {});
+  if (S.cutIn >= 0) {
+    const head = spriteReady('goose') ? (c, x, y, size) => drawSpriteAt(c, 'goose', 'special', x, y, size) : null;
+    drawCutIn(ctx, w, h, S.cutIn, { head });
+  }
 }
 
 function drawFighters(fin, reflection) {
@@ -518,6 +536,7 @@ function show(screen) {
 const touchMode = () => input.usedTouch || matchMedia('(pointer: coarse)').matches;
 
 function goTitle() {
+  audio.music('menu');
   show('title');
   attract();
 }
@@ -526,6 +545,7 @@ function goSelect(mode) {
   audio.unlock();
   audio.play('ui');
   S.mode = mode;
+  audio.music('menu');
   S.picks = [null, null];
   S.picking = 0;
   updateSelectText();
@@ -575,6 +595,7 @@ function showResult() {
   img.hidden = !!PORTRAITS[w.id].failed;
   show('result');
   $('rematch').focus({ preventScroll: true });
+  setTimeout(() => S.screen === 'result' && audio.music('menu'), 2600);
 }
 
 /* ---------- character cards ---------- */
@@ -715,19 +736,23 @@ window.addEventListener('keydown', (e) => {
   } else if (S.screen === 'fight' && (e.code === 'Escape' || e.code === 'KeyP')) {
     S.paused = !S.paused;
     $('pause').hidden = !S.paused;
+    audio.setPaused(S.paused);
   }
 });
 $('resume').addEventListener('click', () => {
   S.paused = false;
+  audio.setPaused(false);
   $('pause').hidden = true;
 });
 $('quit').addEventListener('click', () => {
   S.paused = false;
+  audio.setPaused(false);
   $('pause').hidden = true;
   goTitle();
 });
 $('pause-btn').addEventListener('click', () => {
   S.paused = true;
+  audio.setPaused(true);
   $('pause').hidden = false;
 });
 
@@ -742,6 +767,7 @@ function toast(text) {
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && S.screen === 'fight') {
     S.paused = true;
+    audio.setPaused(true);
     $('pause').hidden = false;
   }
 });

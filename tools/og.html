@@ -1,0 +1,104 @@
+<!doctype html>
+<!-- Share card and README banner. Rendered by Playwright at the size in the
+     query string: og.html?w=1200&h=630 (Open Graph), ?w=1280&h=640 (GitHub). -->
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&display=block">
+<style>
+  html, body { margin: 0; background: #0d0820; }
+  .card {
+    position: relative;
+    overflow: hidden;
+    container-type: size;
+    background: #0d0820;
+    font-family: ui-rounded, "Segoe UI", system-ui, sans-serif;
+    color: #fff;
+  }
+  .art {
+    position: absolute;
+    inset: 0;
+    background: url("../assets/art/keyart.jpg") 62% 30% / cover no-repeat;
+  }
+  .card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(90deg, rgba(13, 8, 32, 0.96) 0%, rgba(13, 8, 32, 0.82) 30%, rgba(13, 8, 32, 0.1) 62%, rgba(13, 8, 32, 0) 100%),
+      linear-gradient(0deg, rgba(13, 8, 32, 0.75) 0%, rgba(13, 8, 32, 0) 35%);
+  }
+  .copy {
+    position: absolute;
+    z-index: 1;
+    left: 6cqw;
+    top: 50%;
+    transform: translateY(-52%);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2.6cqh;
+  }
+  .logo {
+    margin: 0;
+    font: 400 26cqh/0.82 Bangers, Impact, sans-serif;
+    letter-spacing: 0.02em;
+    transform: rotate(-4deg) skewX(-6deg);
+    filter: drop-shadow(0 1.4cqh 0 #0b0618);
+  }
+  .logo span { display: block; -webkit-text-stroke: 1.5cqh #0b0618; paint-order: stroke fill; }
+  .rain { color: #4ff3ff; text-shadow: 0 0 5cqh rgba(79, 243, 255, 0.8); }
+  .fight { background: linear-gradient(180deg, #fff59a 10%, #ffd23f 45%, #ff7a1f 90%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.12em; }
+  .tag { margin: 1cqh 0 0; font-weight: 800; font-size: 4.2cqh; letter-spacing: 0.1em; text-transform: uppercase; color: #ffd9f6; text-shadow: 0 0.4cqh 0 #0b0618, 0 0 2cqh rgba(255, 79, 216, 0.7); }
+  .play {
+    display: inline-flex;
+    align-items: center;
+    gap: 1.6cqh;
+    padding: 2cqh 4.4cqh 2.2cqh 3.4cqh;
+    border-radius: 1.8cqh;
+    border: 0.7cqh solid #0b0618;
+    background: linear-gradient(180deg, #ffe96b, #ff9a1f);
+    box-shadow: 0 1cqh 0 #0b0618, 0 0 6cqh rgba(255, 210, 63, 0.55);
+    transform: skewX(-8deg);
+    font: 400 6.4cqh/1 Bangers, Impact, sans-serif;
+    letter-spacing: 0.05em;
+    color: #fff;
+    -webkit-text-stroke: 0.45cqh #0b0618;
+    paint-order: stroke fill;
+  }
+  .play i { width: 0; height: 0; border-style: solid; border-width: 2cqh 0 2cqh 3.2cqh; border-color: transparent transparent transparent #0b0618; }
+  .studio {
+    position: absolute;
+    z-index: 1;
+    right: 4cqw;
+    bottom: 5cqh;
+    padding: 1.3cqh 2.6cqh;
+    border-radius: 99px;
+    background: rgba(13, 8, 32, 0.7);
+    border: 0.25cqh solid rgba(255, 255, 255, 0.22);
+    font-size: 3cqh;
+  }
+  .studio b { color: #4ff3ff; }
+</style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="art"></div>
+    <div class="copy">
+      <h1 class="logo"><span class="rain">RAIN</span><span class="fight">FIGHT</span></h1>
+      <p class="tag">Rooftop. Rain. One angry goose.</p>
+      <div class="play"><i></i>PLAY FREE IN YOUR BROWSER</div>
+    </div>
+    <div class="studio">a <b>Rain on Roof</b> game</div>
+  </div>
+  <script>
+    const q = new URLSearchParams(location.search);
+    const card = document.getElementById('card');
+    card.style.width = (q.get('w') || 1200) + 'px';
+    card.style.height = (q.get('h') || 630) + 'px';
+    const art = new Image();
+    art.src = '../assets/art/keyart.jpg';
+    Promise.all([document.fonts.load('80px Bangers'), art.decode()]).then(() => (document.title = 'ready'));
+  </script>
+</body>
+</html>

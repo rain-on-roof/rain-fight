@@ -54,7 +54,8 @@ function focusLines(ctx, fw, fh, focus, color, seed) {
 const screamer = createGooseAnimator();
 
 // t: seconds since the cut-in started. fw/fh: frame size in pixels.
-export function drawCutIn(ctx, fw, fh, t, { golden = false, text = 'HONK!!!' } = {}) {
+// `head(ctx, x, y, size)` may draw the screamer instead of the code-drawn goose.
+export function drawCutIn(ctx, fw, fh, t, { golden = false, text = 'HONK!!!', head = null } = {}) {
   if (t < 0 || t > CUT_IN_LENGTH) return;
   const portrait = fh > fw;
   const bandH = portrait ? fh * 0.3 : fh * 0.42;
@@ -129,7 +130,8 @@ export function drawCutIn(ctx, fw, fh, t, { golden = false, text = 'HONK!!!' } =
   screamer.twitch = 0;
   screamer.blink = 0;
   const s = (bandH * 0.62) / 70;
-  drawGoose(ctx, screamer, {
+  if (head) head(ctx, headX - bandH * 0.25 + Math.sin(t * 90) * bandH * 0.012, headY + bandH * 0.5, bandH * 1.0 * scream ** 0.3);
+  else drawGoose(ctx, screamer, {
     x: headX - 210 * s + Math.sin(t * 90) * bandH * 0.012,
     y: 186 * s + bandH * 0.08 + headY,
     scale: s,
@@ -144,14 +146,14 @@ export function drawCutIn(ctx, fw, fh, t, { golden = false, text = 'HONK!!!' } =
   // the full width on a phone.
   const room = portrait ? fw * 0.86 : fw * 0.5;
   ctx.font = `100px ${DISPLAY_FONT}`;
-  const unitW = [...text].reduce((n, ch) => n + ctx.measureText(ch).width * 0.92, 0) / 100;
+  const unitW = [...text].reduce((n, ch) => n + ctx.measureText(ch).width * 1.02, 0) / 100;
   const size = Math.min(bandH * (portrait ? 0.4 : 0.5), room / (unitW * 1.12));
   ctx.font = `${size}px ${DISPLAY_FONT}`;
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'left';
   ctx.lineJoin = 'round';
   const letters = [...text];
-  const widths = letters.map((ch) => ctx.measureText(ch).width * 0.92);
+  const widths = letters.map((ch) => ctx.measureText(ch).width * 1.02);
   const total = widths.reduce((a, b) => a + b, 0);
   let x = portrait ? -total / 2 : fw * 0.44 - total * 1.08;
   for (let i = 0; i < letters.length; i++) {

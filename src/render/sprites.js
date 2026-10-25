@@ -185,3 +185,13 @@ export function spriteHeight(id) {
   if (!s || !s.ready) return 270;
   return s.frames.idle.h * (SCALE[id] || 0.66);
 }
+
+// A frame scaled to `height`, feet at (x, y): for cut-ins and menus.
+export function drawSpriteAt(ctx, id, name, x, y, height) {
+  const s = SPRITES[id];
+  if (!s || !s.ready) return false;
+  const fr = s.frames[name] || s.frames.idle;
+  const k = height / fr.h;
+  ctx.drawImage(s.img, fr.x, fr.y, fr.w, fr.h, x - fr.ax * k, y - fr.ay * k, fr.w * k, fr.h * k);
+  return true;
+}

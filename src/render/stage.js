@@ -565,26 +565,58 @@ export function drawBolt(ctx, stage, w, h, flash) {
   ctx.restore();
 }
 
-/* ---------- painted stage ---------- */
+/* ---------- painted stages ---------- */
 
-// The painted rooftop (assets/stage, cut from one wide painting): the city and
-// parapet drift slower than the fight, the wet floor moves with it. Both are
-// mirror-tiled, so no screen shape ever runs off the edge of the paint.
-const PAINT = { backdrop: null, floor: null };
-const PX = 0.6; // world units per painting pixel
-const PAINT_LINE = 684; // where the floor meets the parapet
-const PAINT_W = 3360 * PX;
+// The painted rooftops (assets/stage, cut by tools/split_stages.py): the city
+// and parapet drift slower than the fight, the wet floor moves with it. Both
+// are mirror-tiled, so no screen shape ever runs off the edge of the paint.
+const PX = 2016 / 3830; // world units per painting pixel
+const PAINT_W = 3830 * PX;
 const PAINT_L = 800 - PAINT_W / 2;
+const FIGHT_ROW = 1412; // painting row the fighters stand on
+export const STAGES = [
+  { id: 'chinatown', cut: 1214 },
+  { id: 'oldtown', cut: 1300 },
+  { id: 'harbor', cut: 1244 },
+  { id: 'billboard', cut: 1270 },
+];
+let current = 0;
 
 export function loadPaintedStage() {
-  for (const k of Object.keys(PAINT)) {
-    const img = new Image();
-    img.src = `assets/stage/${k}.webp`;
-    PAINT[k] = img;
+  for (const st of STAGES) {
+    st.line = GROUND - (FIGHT_ROW - st.cut) * PX;
+    for (const k of ['back', 'floor']) {
+      const img = new Image();
+      img.onload = () => {
+        // Colours to extend the paint past its top and bottom edges.
+        const c = document.createElement('canvas');
+        c.width = 8;
+        c.height = 1;
+        const cx = c.getContext('2d');
+        cx.drawImage(img, 0, k === 'back' ? 0 : img.naturalHeight - 2, img.naturalWidth, 2, 0, 0, 8, 1);
+        const d = cx.getImageData(0, 0, 8, 1).data;
+        let r = 0;
+        let g = 0;
+        let b = 0;
+        for (let i = 0; i < 32; i += 4) {
+          r += d[i];
+          g += d[i + 1];
+          b += d[i + 2];
+        }
+        st[k === 'back' ? 'skyColor' : 'groundColor'] = `rgb(${(r / 8) | 0}, ${(g / 8) | 0}, ${(b / 8) | 0})`;
+      };
+      img.src = `assets/stage/${st.id}-${k}.webp`;
+      st[k] = img;
+    }
   }
 }
 
-export const paintedReady = () => Object.values(PAINT).every((i) => i && i.complete && i.naturalWidth);
+export function setStage(i) {
+  current = ((i % STAGES.length) + STAGES.length) % STAGES.length;
+}
+
+const loaded = (st) => st.back && st.back.complete && st.back.naturalWidth && st.floor.complete && st.floor.naturalWidth;
+export const paintedReady = () => !!loaded(STAGES[current]);
 
 function tiled(ctx, img, left, y, w, h, viewL, viewR) {
   const i0 = Math.floor((viewL - left) / w);
@@ -604,38 +636,37 @@ function tiled(ctx, img, left, y, w, h, viewL, viewR) {
 
 // view: { left, right, top, bottom } in stage space.
 export function drawPaintedStage(ctx, camX, view, flash) {
-  const back = PAINT.backdrop;
-  const floor = PAINT.floor;
-  const bh = back.naturalHeight * PX;
-  const top = PAINT_LINE - bh;
+  const st = STAGES[current];
+  const bh = st.back.naturalHeight * PX;
+  const top = st.line - bh;
   if (view.top < top + 2) {
     const g = ctx.createLinearGradient(0, view.top, 0, top + 2);
     g.addColorStop(0, '#04031a');
-    g.addColorStop(1, '#0a093a');
+    g.addColorStop(1, st.skyColor || '#0a093a');
     ctx.fillStyle = g;
     ctx.fillRect(view.left - 10, view.top - 10, view.right - view.left + 20, top - view.top + 12);
   }
   const off = (camX - 800) * 0.3;
-  tiled(ctx, back, PAINT_L + off, top, PAINT_W, bh, view.left, view.right);
+  tiled(ctx, st.back, PAINT_L + off, top, PAINT_W, bh, view.left, view.right);
   if (flash > 0) {
     // Lightning lights the whole city for a beat.
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = flash * 0.35;
-    tiled(ctx, back, PAINT_L + off, top, PAINT_W, bh, view.left, view.right);
+    ctx.globalAlpha = flash * 0.3;
+    tiled(ctx, st.back, PAINT_L + off, top, PAINT_W, bh, view.left, view.right);
     ctx.restore();
   }
-  const fh = floor.naturalHeight * PX;
-  tiled(ctx, floor, PAINT_L, PAINT_LINE, PAINT_W, fh, view.left, view.right);
-  if (view.bottom > PAINT_LINE + fh - 2) {
-    ctx.fillStyle = '#261b61';
-    ctx.fillRect(view.left - 10, PAINT_LINE + fh - 2, view.right - view.left + 20, view.bottom - PAINT_LINE - fh + 12);
+  const fh = st.floor.naturalHeight * PX;
+  tiled(ctx, st.floor, PAINT_L, st.line, PAINT_W, fh, view.left, view.right);
+  if (view.bottom > st.line + fh - 2) {
+    ctx.fillStyle = st.groundColor || '#151030';
+    ctx.fillRect(view.left - 10, st.line + fh - 2, view.right - view.left + 20, view.bottom - st.line - fh + 12);
   }
   // A shadow line where the parapet meets the floor hides the parallax seam.
-  const s = ctx.createLinearGradient(0, PAINT_LINE - 8, 0, PAINT_LINE + 14);
+  const s = ctx.createLinearGradient(0, st.line - 8, 0, st.line + 14);
   s.addColorStop(0, 'rgba(5, 3, 15, 0)');
-  s.addColorStop(0.4, 'rgba(5, 3, 15, 0.55)');
+  s.addColorStop(0.4, 'rgba(5, 3, 15, 0.5)');
   s.addColorStop(1, 'rgba(5, 3, 15, 0)');
   ctx.fillStyle = s;
-  ctx.fillRect(view.left - 10, PAINT_LINE - 8, view.right - view.left + 20, 22);
+  ctx.fillRect(view.left - 10, st.line - 8, view.right - view.left + 20, 22);
 }
