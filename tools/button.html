@@ -1,0 +1,19 @@
+<!doctype html>
+<!-- The PLAY NOW button image for READMEs (rendered at 2x by Playwright). -->
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&display=block">
+<style>
+  html, body { margin: 0; background: transparent; }
+  .wrap { display: inline-block; padding: 14px 18px 22px; }
+  .btn { display: inline-flex; align-items: center; gap: 16px; padding: 14px 36px 16px 28px; border-radius: 16px; border: 6px solid #0b0618;
+    background: linear-gradient(180deg, #ffe96b, #ff9a1f); box-shadow: 0 8px 0 #0b0618; transform: skewX(-8deg);
+    font: 400 52px/1 Bangers, Impact, sans-serif; letter-spacing: 0.05em; color: #fff; -webkit-text-stroke: 4px #0b0618; paint-order: stroke fill; }
+  .btn i { width: 0; height: 0; border-style: solid; border-width: 16px 0 16px 26px; border-color: transparent transparent transparent #0b0618; transform: skewX(8deg); }
+  .btn span { transform: skewX(8deg); }
+</style></head>
+<body><div class="wrap" id="card"><div class="btn"><i></i><span id="t">PLAY NOW</span></div></div>
+<script>
+  const q = new URLSearchParams(location.search);
+  if (q.get('text')) document.getElementById('t').textContent = q.get('text');
+  document.fonts.load('52px Bangers').then(() => (document.title = 'ready'));
+</script></body></html>
