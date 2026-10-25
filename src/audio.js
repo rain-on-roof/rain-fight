@@ -17,7 +17,8 @@ export function createAudio() {
   let reverb = null;
   let delay = null;
   let noise = null;
-  let muted = false;
+  let muted = false; // the player's mute button
+  let hostMuted = false; // the portal's say: ads, tab switches
   let paused = false;
   let wanted = null;
   const music = { track: null, step: 0, next: 0, timer: 0, intensity: 0 };
@@ -32,7 +33,7 @@ export function createAudio() {
     if (!AC) return;
     ctx = new AC();
     master = ctx.createGain();
-    master.gain.value = muted ? 0 : 0.9;
+    master.gain.value = muted || hostMuted ? 0 : 0.9;
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -14;
     comp.knee.value = 8;
@@ -538,7 +539,7 @@ export function createAudio() {
     while (music.next < ctx.currentTime + 0.14) {
       let step = music.step;
       if (step >= tr.loopFrom + tr.loopLen) step = music.step = tr.loopFrom;
-      if (!muted) tr.play(step, music.next, music.intensity);
+      if (!muted && !hostMuted) tr.play(step, music.next, music.intensity);
       music.next += stepDur;
       music.step += 1;
     }
@@ -554,6 +555,10 @@ export function createAudio() {
     g.linearRampToValueAtTime(0.0001, ctx.currentTime + fade);
     // Restore the level for stingers once the tail has faded.
     g.setValueAtTime(MUSIC_LEVEL, ctx.currentTime + fade + 0.05);
+  }
+
+  function applyGain() {
+    if (master) master.gain.setTargetAtTime(muted || hostMuted ? 0 : 0.9, ctx.currentTime, 0.03);
   }
 
   /* ---------- rain ---------- */
@@ -575,7 +580,7 @@ export function createAudio() {
   return {
     unlock,
     play(name, delay = 0) {
-      if (!ctx || muted || !SOUNDS[name]) return;
+      if (!ctx || muted || hostMuted || !SOUNDS[name]) return;
       SOUNDS[name](ctx.currentTime + 0.005 + delay);
     },
     // music('fight' | 'menu' | null)
@@ -594,7 +599,17 @@ export function createAudio() {
     },
     setMuted(v) {
       muted = v;
-      if (master) master.gain.setTargetAtTime(v ? 0 : 0.9, ctx.currentTime, 0.03);
+      applyGain();
+    },
+    setHostMuted(v) {
+      hostMuted = v;
+      applyGain();
+    },
+    // The host paused the game: freeze the clock, so music picks up where it stopped.
+    setSuspended(v) {
+      if (!ctx) return;
+      if (v) ctx.suspend();
+      else ctx.resume();
     },
     get muted() {
       return muted;

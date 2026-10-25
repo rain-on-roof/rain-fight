@@ -2,7 +2,7 @@
 import { INK, inkUnder, easeOutBack, clamp01 } from './paint.js';
 import { star } from './goose.js';
 
-export const DISPLAY_FONT = 'Bangers, "Arial Black", "Arial Rounded MT Bold", "Segoe UI Black", Impact, system-ui, sans-serif';
+export const DISPLAY_FONT = '"RF Display", "Arial Black", "Arial Rounded MT Bold", "Segoe UI Black", Impact, system-ui, sans-serif';
 
 export function createFx() {
   return { parts: [], shakeAmount: 0, shakeTime: 0, flash: 0, punch: 0 };

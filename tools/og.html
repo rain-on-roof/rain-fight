@@ -1,6 +1,8 @@
 <!doctype html>
 <!-- Share card and README banner. Rendered by Playwright at the size in the
-     query string: og.html?w=1200&h=630 (Open Graph), ?w=1280&h=640 (GitHub). -->
+     query string: og.html?w=1200&h=630 (Open Graph), ?w=1280&h=640 (GitHub).
+     &clean=1 drops the call to action and the studio badge: portal covers
+     carry the title and nothing else. -->
 <html>
 <head>
 <meta charset="utf-8">
@@ -96,6 +98,7 @@
     const card = document.getElementById('card');
     card.style.width = (q.get('w') || 1200) + 'px';
     card.style.height = (q.get('h') || 630) + 'px';
+    if (q.get('clean')) document.querySelectorAll('.play, .studio').forEach((el) => el.remove());
     const art = new Image();
     art.src = '../assets/art/keyart.jpg';
     Promise.all([document.fonts.load('80px Bangers'), art.decode()]).then(() => (document.title = 'ready'));

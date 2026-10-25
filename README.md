@@ -61,6 +61,8 @@ Plain HTML, ES modules and Canvas 2D: no build step, no dependencies, no server.
 |---|---|
 | `src/fight/` | The fight itself, pure and deterministic at 60 steps a second: moves and frame data, fighters, rounds and finishers, the CPU. No DOM. |
 | `src/render/` | Sprites, the painted stages with parallax, effects, the HUD, finishers, the HONK cut-in. |
+| `src/portal.js` | The only contact with a portal: SDK start, language, saves, pause and audio, ads between matches. A no-op on the open web. |
+| `src/i18n.js` | Interface copy in English, Russian, Ukrainian, Spanish, Portuguese, German, French and Turkish. |
 | `src/audio.js` | The synth: a step sequencer for both tracks, stingers, layered hit sounds, rain and thunder. |
 | `tools/cut_sprites.py` | Keys the green-screen sprite sheets, finds each pose as a blob, sets its feet anchor and packs one atlas per fighter. |
 | `tools/split_stages.py` | Cuts each stage painting into a slow backdrop and a floor that moves with the fight. |
@@ -69,6 +71,8 @@ Plain HTML, ES modules and Canvas 2D: no build step, no dependencies, no server.
 Character sheets, key art and stages were made with AI image generation from our briefs (in `tools/`) and then cut, keyed and animated by the code above.
 
 Run it locally with `node tools/serve.mjs` and open http://localhost:4517.
+
+**Portal build.** `node tools/build_portal.mjs` packs a zip for game portals (Playgama, Y8 and others through Playgama Bridge): platform language, cloud saves, pause and mute on request, an ad between matches, no outbound links. Details in [docs/portals.md](docs/portals.md).
 
 ## More from Rain on Roof
 

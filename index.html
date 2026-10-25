@@ -18,9 +18,7 @@
   <meta name="twitter:title" content="Rain Fight — END IT.">
   <meta name="twitter:description" content="Rooftop. Rain. Four fighters and an angry goose. Play free in your browser.">
   <meta name="twitter:image" content="https://rain-on-roof.github.io/rain-fight/assets/og.jpg">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&display=swap">
+  <link rel="preload" href="assets/fonts/bangers-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -36,25 +34,25 @@
         <h1 class="logo" aria-label="Rain Fight">
           <span class="logo-rain">RAIN</span><span class="logo-fight">FIGHT</span>
         </h1>
-        <p class="tagline">Rooftop. Rain. One angry goose.</p>
+        <p class="tagline" data-i18n="tagline">Rooftop. Rain. One angry goose.</p>
         <div class="menu">
           <button id="play-cpu" class="btn btn-main" type="button">
-            <span>FIGHT</span><small>vs CPU</small>
+            <span data-i18n="fight">FIGHT</span><small data-i18n="vsCpu">vs CPU</small>
           </button>
           <button id="play-versus" class="btn btn-alt" type="button">
-            <span>2 PLAYERS</span><small>same screen</small>
+            <span data-i18n="twoPlayers">2 PLAYERS</span><small data-i18n="sameScreen">same screen</small>
           </button>
         </div>
         <div class="levels" role="group" aria-label="CPU difficulty">
-          <button type="button" data-level="easy" aria-pressed="false">EASY</button>
-          <button type="button" data-level="normal" aria-pressed="true">NORMAL</button>
-          <button type="button" data-level="hard" aria-pressed="false">HARD</button>
+          <button type="button" data-level="easy" aria-pressed="false" data-i18n="easy">EASY</button>
+          <button type="button" data-level="normal" aria-pressed="true" data-i18n="normal">NORMAL</button>
+          <button type="button" data-level="hard" aria-pressed="false" data-i18n="hard">HARD</button>
         </div>
-        <p class="keys only-desktop">
+        <p id="keys" class="keys only-desktop">
           <kbd>WASD</kbd> move · <kbd>J</kbd> punch · <kbd>K</kbd> kick · <kbd>L</kbd> special · <kbd>Space</kbd> block
         </p>
       </div>
-      <a class="studio" href="https://github.com/rain-on-roof" target="_blank" rel="noopener">a <b>Rain on Roof</b> game</a>
+      <a id="studio" class="studio" href="https://github.com/rain-on-roof" target="_blank" rel="noopener">a <b>Rain on Roof</b> game</a>
     </section>
 
     <!-- Character select -->
@@ -63,10 +61,10 @@
         <button id="back" class="icon-btn back" type="button" aria-label="Back">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
         </button>
-        <h2 id="select-title">CHOOSE YOUR FIGHTER</h2>
+        <h2 id="select-title" data-i18n="choose">CHOOSE YOUR FIGHTER</h2>
       </header>
       <div id="cards" class="cards"></div>
-      <p class="select-hint only-desktop">← → to choose · <kbd>Enter</kbd> to fight</p>
+      <p id="select-hint" class="select-hint only-desktop">← → to choose · <kbd>Enter</kbd> to fight</p>
     </section>
 
     <!-- Result -->
@@ -78,12 +76,12 @@
           <h2 id="result-title">YOU WIN</h2>
           <p id="result-sub" class="result-sub"></p>
           <div class="result-actions">
-            <button id="rematch" class="btn btn-main" type="button"><span>REMATCH</span></button>
-            <button id="share" class="btn btn-alt" type="button"><span>SHARE</span></button>
+            <button id="rematch" class="btn btn-main" type="button"><span data-i18n="rematch">REMATCH</span></button>
+            <button id="share" class="btn btn-alt" type="button"><span data-i18n="share">SHARE</span></button>
           </div>
           <div class="result-links">
-            <button id="change" type="button">Change fighter</button>
-            <button id="menu" type="button">Main menu</button>
+            <button id="change" type="button" data-i18n="change">Change fighter</button>
+            <button id="menu" type="button" data-i18n="menu">Main menu</button>
           </div>
         </div>
       </div>
@@ -92,9 +90,9 @@
     <!-- Pause -->
     <section id="pause" class="screen modal" hidden>
       <div class="pause-card">
-        <h2>PAUSED</h2>
-        <button id="resume" class="btn btn-main" type="button"><span>RESUME</span></button>
-        <button id="quit" class="btn btn-alt" type="button"><span>QUIT</span></button>
+        <h2 data-i18n="paused">PAUSED</h2>
+        <button id="resume" class="btn btn-main" type="button"><span data-i18n="resume">RESUME</span></button>
+        <button id="quit" class="btn btn-alt" type="button"><span data-i18n="quit">QUIT</span></button>
       </div>
     </section>
 

@@ -14,6 +14,8 @@ import { drawPuppet, LOOKS } from './render/puppet.js';
 import { POSES } from './render/poses.js';
 import { createGooseAnimator, updateGoose, drawGoose } from './render/goose.js';
 import { softShadow, clamp01, lerp } from './render/paint.js';
+import { t, setLanguage } from './i18n.js';
+import * as portal from './portal.js';
 import { loadSprites, hasFrame, spriteReady, drawSpriteAt } from './render/sprites.js';
 import { loadPaintedStage, paintedReady, drawPaintedStage, setStage, STAGES } from './render/stage.js';
 
@@ -27,7 +29,7 @@ const audio = createAudio();
 const STEP = 1 / 60;
 
 loadSprites(ROSTER);
-document.fonts?.load("48px Bangers");
+document.fonts?.load('48px "RF Display"', 'AЖ');
 loadPaintedStage();
 
 const PORTRAITS = {};
@@ -38,18 +40,11 @@ for (const id of ROSTER) {
   PORTRAITS[id] = img;
 }
 
-const SPECIALS = { volt: 'Lightning bolt', brick: 'Ground slam', shade: 'Shadow step', goose: 'HONK' };
-const BLURBS = {
-  volt: 'Fast hands, faster bolts.',
-  brick: 'Hits like a falling fridge.',
-  shade: 'Now you see him.',
-  goose: 'Escaped from a park. Angry.',
-};
 
 const S = {
   screen: 'title',
   mode: 'cpu',
-  level: loadLevel(),
+  level: 'normal',
   picks: [null, null],
   picking: 0,
   match: null,
@@ -69,6 +64,9 @@ const S = {
   view: { w: 1, h: 1, dpr: 1 },
   resultAt: 0,
   paused: false,
+  hostPaused: false,
+  hostAudioOff: false,
+  adOpen: false,
   attract: true,
 };
 
@@ -104,6 +102,7 @@ function startMatch(p1, p2, mode, attract = false) {
   S.resultAt = 0;
   S.cam.x = 800;
   if (!attract) {
+    portal.matchStarted();
     audio.intensity = 0;
     audio.music('fight');
     handleEvents([{ type: 'round', n: 1, final: false }]);
@@ -192,7 +191,7 @@ function handleEvents(events) {
         if (loud) banner(S.hud, 'TIME', { color: '#ffffff', accent: '#4ff3ff', life: 1.2 });
         break;
       case 'endIt':
-        if (loud) banner(S.hud, 'END IT!', { color: '#ff3d3d', accent: '#ffd23f', life: 2.6, size: 1.2, sub: 'press SPECIAL' });
+        if (loud) banner(S.hud, 'END IT!', { color: '#ff3d3d', accent: '#ffd23f', life: 2.6, size: 1.2, sub: t('pressSpecial') });
         play('endIt');
         if (loud) audio.music(null);
         S.slowmo = 0.6;
@@ -212,6 +211,7 @@ function handleEvents(events) {
           audio.music(null);
           const won = S.mode !== 'cpu' || ev.side === 0;
           play(won ? 'victory' : 'defeat', ev.finisher ? 0.9 : 0.7);
+          portal.matchEnded(won);
         }
         if (loud && !ev.finisher) banner(S.hud, `${m.fighters[ev.side].def.name} WINS`, { color: '#ffffff', accent: '#ffd23f', life: 2, size: 0.9 });
         break;
@@ -308,7 +308,7 @@ function update(dt) {
   S.time += dt;
   const m = S.match;
   if (!m) return;
-  if (S.paused) return;
+  if (S.paused || S.hostPaused) return;
   const flash = updateLightning(S.stage, S.time, dt);
   if (S.stage.lightning.thunder) {
     S.stage.lightning.thunder = false;
@@ -554,8 +554,7 @@ function goSelect(mode) {
 }
 
 function updateSelectText() {
-  const who = S.mode === 'versus' ? (S.picking === 0 ? 'PLAYER 1' : 'PLAYER 2') : 'CHOOSE YOUR FIGHTER';
-  $('select-title').textContent = S.mode === 'versus' ? `${who}, CHOOSE` : who;
+  $('select-title').textContent = S.mode === 'versus' ? t(S.picking === 0 ? 'p1choose' : 'p2choose') : t('choose');
   document.querySelectorAll('.card').forEach((c) => {
     c.classList.toggle('p1', c.dataset.id === S.picks[0]);
     c.classList.toggle('p2', c.dataset.id === S.picks[1]);
@@ -586,10 +585,10 @@ function showResult() {
   const m = S.match;
   const w = m.winner;
   const human = S.mode === 'cpu' ? w.side === 0 : true;
-  $('result-title').textContent = S.mode === 'cpu' ? (human ? 'YOU WIN' : 'YOU LOSE') : `${w.def.name} WINS`;
+  $('result-title').textContent = S.mode === 'cpu' ? t(human ? 'youWin' : 'youLose') : t('wins', { name: w.def.name });
   const fin = m.finisher ? (m.finisher.id === 'undressed' && m.fighters[1 - w.side].id === 'goose' ? 'PLUCKED' : FINISHERS[m.finisher.id].name) : null;
-  $('result-sub').textContent = fin ? `${w.def.name} · ${fin}!` : `${w.def.name} takes it`;
-  $('result-level').textContent = S.mode === 'cpu' ? `vs CPU · ${S.level.toUpperCase()}` : 'Local versus';
+  $('result-sub').textContent = fin ? `${w.def.name} · ${fin}!` : t('takesIt', { name: w.def.name });
+  $('result-level').textContent = S.mode === 'cpu' ? t('vsCpuLevel', { level: t(S.level) }) : t('localVersus');
   const img = $('result-img');
   img.src = PORTRAITS[w.id].src;
   img.hidden = !!PORTRAITS[w.id].failed;
@@ -619,8 +618,8 @@ function buildCards() {
       </div>
       <div class="card-info">
         <b>${def.name}</b>
-        <span>${BLURBS[id]}</span>
-        <i>SPECIAL · ${SPECIALS[id]}</i>
+        <span data-i18n="blurb_${id}"></span>
+        <i><em data-i18n="special"></em> · <em data-i18n="special_${id}"></em></i>
       </div>
       <em class="tag tag-p1">P1</em><em class="tag tag-p2">${S.mode === 'versus' ? 'P2' : 'CPU'}</em>`;
     const img = card.querySelector('img');
@@ -662,19 +661,10 @@ function renderCards() {
 
 /* ---------- wiring ---------- */
 
-function loadLevel() {
-  try {
-    return localStorage.getItem('rainfight.level') || 'normal';
-  } catch {
-    return 'normal';
-  }
-}
-
-function setLevel(level) {
+function setLevel(level, store = true) {
+  if (!['easy', 'normal', 'hard'].includes(level)) level = 'normal';
   S.level = level;
-  try {
-    localStorage.setItem('rainfight.level', level);
-  } catch {}
+  if (store) portal.save('level', level);
   document.querySelectorAll('[data-level]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.level === level)));
 }
 
@@ -689,29 +679,49 @@ $('back').addEventListener('click', () => {
   audio.play('ui');
   goTitle();
 });
-$('rematch').addEventListener('click', () => {
+$('rematch').addEventListener('click', () => afterBreak(() => {
+  // The same two fighters as the match that just ended.
+  const [a, b] = S.match.fighters.map((f) => f.id);
   audio.play('select');
   show('fight');
-  startMatch(S.picks[0], S.picks[1], S.mode);
-});
-$('change').addEventListener('click', () => goSelect(S.mode));
-$('menu').addEventListener('click', () => {
+  startMatch(a, b, S.mode);
+}));
+$('change').addEventListener('click', () => afterBreak(() => goSelect(S.mode)));
+$('menu').addEventListener('click', () => afterBreak(() => {
   audio.play('ui');
   goTitle();
-});
+}));
+
+// Between matches is the one natural break in a fighting game, so that is
+// where a portal may show an interstitial; mid-match round breaks last two
+// seconds and count as gameplay. On the open web `next` runs at once.
+let breaking = false;
+async function afterBreak(next) {
+  if (breaking) return;
+  breaking = true;
+  S.adOpen = true;
+  audio.setHostMuted(true);
+  try {
+    await portal.breakAd();
+  } finally {
+    S.adOpen = false;
+    audio.setHostMuted(S.hostAudioOff);
+    breaking = false;
+  }
+  next();
+}
 $('share').addEventListener('click', async () => {
   const m = S.match;
   const w = m.winner;
-  const fin = m.finisher ? FINISHERS[m.finisher.id].name : 'beat';
   const text = S.mode === 'cpu' && w.side === 0
-    ? `I just ${fin === 'beat' ? 'beat' : fin} the CPU on ${S.level.toUpperCase()} as ${w.def.name} in RAIN FIGHT ⚡ Your turn:`
-    : `RAIN FIGHT: ${w.def.name} wins. Think you can do better? ⚡`;
+    ? t('shareWin', { level: t(S.level), name: w.def.name })
+    : t('shareOther', { name: w.def.name });
   const url = location.origin + location.pathname;
   try {
     if (navigator.share) await navigator.share({ title: 'Rain Fight', text, url });
     else {
       await navigator.clipboard.writeText(`${text} ${url}`);
-      toast('Link copied');
+      toast(t('copied'));
     }
   } catch {}
 });
@@ -776,11 +786,53 @@ app.addEventListener('pointerdown', () => {
   if (S.screen === 'fight') $('pad').hidden = !touchMode();
 });
 
+/* ---------- copy and portal ---------- */
+
+function applyCopy() {
+  document.querySelectorAll('[data-i18n]').forEach((el) => (el.textContent = t(el.dataset.i18n)));
+  const k = (key, word) => `<kbd>${key}</kbd> ${t(word)}`;
+  $('keys').innerHTML = [k('WASD', 'k_move'), k('J', 'k_punch'), k('K', 'k_kick'), k('L', 'k_special'), k('Space', 'k_block')].join(' · ');
+  $('studio').innerHTML = t('studio', { studio: '<b>Rain on Roof</b>' });
+  $('select-hint').innerHTML = t('selectHint', { enter: '<kbd>Enter</kbd>' });
+  if (S.screen === 'select') updateSelectText();
+}
+
+// A portal page carries no way out: no studio link, no share button.
+if (portal.isPortal()) {
+  app.dataset.portal = '1';
+  $('studio').removeAttribute('href');
+  $('studio').removeAttribute('target');
+}
+
+setLanguage(navigator.language);
 buildCards();
-setLevel(S.level);
+applyCopy();
+setLevel(S.level, false);
 resize();
 new ResizeObserver(resize).observe(arena);
 goTitle();
 requestAnimationFrame(frame);
 
-window.__rainFight = { S, startMatch, show, goSelect, pick };
+portal
+  .init({
+    onPause: (paused) => {
+      S.hostPaused = paused;
+      audio.setSuspended(paused);
+    },
+    onAudio: (enabled) => {
+      S.hostAudioOff = !enabled;
+      audio.setHostMuted(!enabled || S.adOpen);
+    },
+  })
+  .then(async (lang) => {
+    if (lang) {
+      setLanguage(lang);
+      applyCopy();
+    }
+    const level = await portal.load('level');
+    if (level) setLevel(level, false);
+    // The title and its demo fight are on screen and answer input.
+    requestAnimationFrame(() => portal.ready());
+  });
+
+window.__rainFight = { S, startMatch, show, goSelect, pick, setLanguage: (l) => (setLanguage(l), applyCopy()) };
